@@ -1,0 +1,4 @@
+module XGit {
+    umbrella header "Repository.h"
+    export *
+}
