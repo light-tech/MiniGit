@@ -21,6 +21,11 @@ struct MergeHandler: CheckoutProgressReporter, GitErrorReporter {
             git_annotated_commit_free(annotated[i]);
         }
         delete[] annotated;
+
+        // Used in fast-forward
+        git_reference_free(target_ref);
+        git_reference_free(new_target_ref);
+        git_object_free(target);
     }
 
     git_annotated_commit **annotated = NULL;
@@ -79,6 +84,7 @@ struct MergeHandler: CheckoutProgressReporter, GitErrorReporter {
 
             git_merge_options merge_opts = GIT_MERGE_OPTIONS_INIT;
             git_checkout_options checkout_opts = GIT_CHECKOUT_OPTIONS_INIT;
+            setupCheckoutCallbacks(&checkout_opts);
 
             merge_opts.flags = 0;
             merge_opts.file_flags = GIT_MERGE_FILE_STYLE_DIFF3;
@@ -105,70 +111,54 @@ private:
 
     id<MergeProtocol> mergeProgress;
 
+    git_reference *target_ref = NULL;
+    git_reference *new_target_ref = NULL;
+    git_object *target = NULL;
+
     int perform_fastforward(git_repository *repo, const git_oid *target_oid, int is_unborn)
     {
         git_checkout_options ff_checkout_options = GIT_CHECKOUT_OPTIONS_INIT;
-        git_reference *target_ref;
-        git_reference *new_target_ref;
-        git_object *target = NULL;
-        int err = 0;
+        setupCheckoutCallbacks(&ff_checkout_options);
 
         if (is_unborn) {
-            const char *symbolic_ref;
-            git_reference *head_ref;
+            const char *symbolic_ref = NULL;
+            git_reference *head_ref = NULL;
 
             /* HEAD reference is unborn, lookup manually so we don't try to resolve it */
-            err = git_reference_lookup(&head_ref, repo, "HEAD");
-            if (err != 0) {
-                fprintf(stderr, "failed to lookup HEAD ref\n");
+            if (reportError(git_reference_lookup(&head_ref, repo, "HEAD"), "failed to lookup HEAD ref")) {
                 return -1;
             }
 
             /* Grab the reference HEAD should be pointing to */
             symbolic_ref = git_reference_symbolic_target(head_ref);
+            git_reference_free(head_ref);
 
             /* Create our master reference on the target OID */
-            err = git_reference_create(&target_ref, repo, symbolic_ref, target_oid, 0, NULL);
-            if (err != 0) {
-                fprintf(stderr, "failed to create master reference\n");
+            if (reportError(git_reference_create(&target_ref, repo, symbolic_ref, target_oid, 0, NULL), "failed to create HEAD branch")) {
                 return -1;
             }
-
-            git_reference_free(head_ref);
         } else {
             /* HEAD exists, just lookup and resolve */
-            err = git_repository_head(&target_ref, repo);
-            if (err != 0) {
-                fprintf(stderr, "failed to get HEAD reference\n");
+            if (reportError(git_repository_head(&target_ref, repo), "failed to get HEAD reference")) {
                 return -1;
             }
         }
 
         /* Lookup the target object */
-        err = git_object_lookup(&target, repo, target_oid, GIT_OBJECT_COMMIT);
-        if (err != 0) {
-            fprintf(stderr, "failed to lookup OID %s\n", git_oid_tostr_s(target_oid));
+        if (reportError(git_object_lookup(&target, repo, target_oid, GIT_OBJECT_COMMIT), "failed to lookup target OID")) {
             return -1;
         }
 
         /* Checkout the result so the workdir is in the expected state */
         ff_checkout_options.checkout_strategy = GIT_CHECKOUT_SAFE;
-        err = git_checkout_tree(repo, target, &ff_checkout_options);
-        if (err != 0) {
-            fprintf(stderr, "failed to checkout HEAD reference\n");
+        if (reportError(git_checkout_tree(repo, target, &ff_checkout_options), "failed to checkout HEAD")) {
             return -1;
         }
 
         /* Move the target reference to the target OID */
-        err = git_reference_set_target(&new_target_ref, target_ref, target_oid, NULL);
-        if (err != 0) {
-            fprintf(stderr, "failed to move HEAD reference\n");
+        if (reportError(git_reference_set_target(&new_target_ref, target_ref, target_oid, NULL), "failed to update HEAD")) {
             return -1;
         }
-
-        git_reference_free(target_ref);
-        git_reference_free(new_target_ref);
-        git_object_free(target);
 
         return 0;
     }
