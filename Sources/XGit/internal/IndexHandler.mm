@@ -64,7 +64,7 @@ struct IndexHandler: GitErrorReporter {
     }
 
     // Used in commit method
-    git_tree *tree;
+    git_tree *tree = NULL;
     git_object *parent = NULL;
     git_reference *ref = NULL;
     git_signature *signature = NULL;
