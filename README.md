@@ -2,7 +2,7 @@
 
 Minimal Swift package to provide most common Git functionalities.
 
-Check out [OmiGit](https://apps.apple.com/us/app/omigit/id1597699768) on the App Store for illustration of the package's features.
+Check out [OmiGit](https://apps.apple.com/us/app/omigit/id1597699768) on the App Store for illustration of the package's features. See also [our sample app](https://github.com/light-tech/MiniGit-SampleApp).
 
 While `SwiftGit2` already provides a Swift binding for `libgit2`, it is lacking some crucial features such as `git push`.
 In an attempt to implement those, we come to believe it is best to write C code in C/C++ instead of [Swift's syntax for C code](https://github.com/apple/swift/blob/main/docs/HowSwiftImportsCAPIs.md) so that it will be much easier for future development and maintenance.
@@ -45,6 +45,8 @@ If you use both XGit and MiniGit i.e. add both to your project's target **Framew
 If you use the core module XGit by itself only, then you must add the `libgit2.xcframework`, `libz.tbd` and `libiconv.tbd` to your project's target **Frameworks, Libraries and Embedded Contents**.
 
 When building for real iPhone, disable Bitcode.
+
+See [our sample app](https://github.com/light-tech/MiniGit-SampleApp) for a starting point.
 
 # Design
 
