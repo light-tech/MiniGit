@@ -32,11 +32,16 @@ struct IndexHandler: GitErrorReporter {
 
     git_index *index = NULL;
 
+    static int print_matched_cb(const char *path, const char *matched_pathspec, void *payload){
+        return 0;
+    }
+
     void stage(git_repository *repo, const char* path) {
         if (reportError(git_repository_index(&index, repo), "Cannot open index"))
             return;
 
-        if (reportError(git_index_add_bypath(index, path), "Fail to stage path"))
+        git_strarray pathspec = { (char**)(&path), 1 };
+        if (reportError(git_index_add_all(index, &pathspec, 0, print_matched_cb, this), "Fail to stage path"))
             return;
 
         reportError(git_index_write(index), "Cannot write index");
@@ -50,11 +55,10 @@ struct IndexHandler: GitErrorReporter {
         if (reportError(git_repository_index(&index, repo), "Cannot open index"))
             return;
 
-        if (reportError(git_repository_head(&head_ref, repo), "Cannot obtain repo HEAD"))
-            return;
-
-        if (reportError(git_reference_peel(&head_commit, head_ref, GIT_OBJECT_COMMIT), "Cannot peel HEAD to a tree; HEAD might be corrupted!"))
-            return;
+        if (git_repository_head(&head_ref, repo) == 0) {
+            if (reportError(git_reference_peel(&head_commit, head_ref, GIT_OBJECT_COMMIT), "Cannot peel HEAD to a tree; HEAD might be corrupted!"))
+                return;
+        }
 
         git_strarray pathspec = { (char**)(&path), 1 };
         if (reportError(git_reset_default(repo, head_commit, &pathspec), "git reset failed"))

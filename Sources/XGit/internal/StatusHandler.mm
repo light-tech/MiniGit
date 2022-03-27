@@ -112,11 +112,11 @@ private:
     }
 
     void computeStagedChanges(git_repository *repo) {
-        if (reportError(git_repository_head(&head_ref, repo), "Error determining HEAD commit"))
-            return;
-
-        if (reportError(git_reference_peel(&head_tree, head_ref, GIT_OBJECT_TREE), "Warning: HEAD does not point to a commit tree! This repo might be corrupted!"))
-            return;
+        head_tree = NULL;
+        if (git_repository_head(&head_ref, repo) == 0) {
+            if (reportError(git_reference_peel(&head_tree, head_ref, GIT_OBJECT_TREE), "Warning: HEAD does not point to a commit tree! This repo might be corrupted!"))
+                return;
+        }
 
         git_diff *staged_changes;
 
