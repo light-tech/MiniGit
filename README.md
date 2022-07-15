@@ -77,10 +77,6 @@ However, to avoid usage of `goto` statements (to perform clean-up, deallocate ob
  * `internal/`: Internal implementation, excluded from the package, as they are `#import`ed directly into the single main implementation file `Repository.mm`.
  * `Repository.mm`: Our main implementation file.
 
-# Known problems
-
-This package currently only supports iOS simulator and Mac Catalyst on __Intel Macs__ because we do not own an M1 Mac yet to ensure that it works there.
-
 # License
 
 Same as [libgit2](https://github.com/libgit2/libgit2).
