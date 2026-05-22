@@ -1,4 +1,57 @@
-### MiniGit
+# MiniGit fork for Pomez
+
+This is a fork of [`light-tech/MiniGit`](https://github.com/light-tech/MiniGit).
+
+## Fork changes
+
+This fork exposes the underlying `libgit2` `git_diff_delta.status` value through `DiffDelta.status`.
+
+This allows Swift/iOS clients to distinguish Git file changes more accurately, including:
+
+- modified
+- added
+- deleted
+- renamed
+- copied
+- untracked
+- ignored
+- type changed
+- unreadable
+- conflicted
+
+## Added API
+
+```objc
+@property (readonly) int status;
+````
+
+Added to:
+
+```text
+Sources/XGit/include/DiffDelta.h
+```
+
+Assigned from:
+
+```objc
+self->_status = delta->status;
+```
+
+in:
+
+```text
+Sources/XGit/internal/DiffDelta.mm
+```
+
+## Purpose
+
+The original MiniGit `DiffDelta` exposes file paths but not the raw delta status. For apps such as Pomez, this makes untracked files difficult to distinguish from modified files.
+
+This fork keeps the original MiniGit behavior and only exposes the missing status value.
+
+---
+
+# MiniGit
 
 Minimal Swift package to provide most common Git functionalities.
 
@@ -11,28 +64,29 @@ Thankfully, Apple's Swift Package Manager now supported Swift modules written in
 This leads us to make a new Swift package `MiniGit` to provide the bare minimal Git functionality written in Objective-C that could be used in Swift-based projects.
 (But really it is just C++ mostly: Objective-C was to establish an interface to the Swift side.)
 
-There are two libraries (_modules_, to be precise) in this Swift package:
- * __XGit__: The eXtensible Git module, written in Objective-C, whose classes could be subclassed to provide extra functionalities desired. All interactions with `libgit2` happen here.
- * __MiniGit__: The UI extension of XGit whose classes extend those of XGit and conform to `Identifiable` and `ObservableObject` to support SwiftUI binding.
+There are two libraries (*modules*, to be precise) in this Swift package:
+
+* **XGit**: The eXtensible Git module, written in Objective-C, whose classes could be subclassed to provide extra functionalities desired. All interactions with `libgit2` happen here.
+* **MiniGit**: The UI extension of XGit whose classes extend those of XGit and conform to `Identifiable` and `ObservableObject` to support SwiftUI binding.
 
 # Features
 
 Provide key features from the following commonly used `git` commands:
 
- * `git init`
- * `git clone`
- * `git status`
- * `git diff`
- * `git add`
- * `git restore --staged`
- * `git commit`
- * `git log`
- * `git branch`
- * `git push`
- * `git fetch`
- * `git merge`
- * `git checkout`
- * `git reset`
+* `git init`
+* `git clone`
+* `git status`
+* `git diff`
+* `git add`
+* `git restore --staged`
+* `git commit`
+* `git log`
+* `git branch`
+* `git push`
+* `git fetch`
+* `git merge`
+* `git checkout`
+* `git reset`
 
 There is one notable behavioral differece in the `merge` implementation: **We do not create the merge commit automatically.**
 After a merge, the client must do that to clear the MERGE state (after resolving all conflicts) or reset to discard the unwanted merge.
@@ -68,14 +122,14 @@ This is to make it easier to use in SwiftUI: Swift client could then implement t
 
 # Implementation
 
-Most functionalities are implemented by literally __copy and paste__ libgit2's sample codes.
+Most functionalities are implemented by literally **copy and paste** libgit2's sample codes.
 However, to avoid usage of `goto` statements (to perform clean-up, deallocate objects upon failure), we use single-use C++ struct and make use of the fact that as an object goes out of scope, it gets destroyed automatically.
 
 # Source structure
 
- * `include/`: Module export, umbrella header `Repository.h` and the supplementary headers.
- * `internal/`: Internal implementation, excluded from the package, as they are `#import`ed directly into the single main implementation file `Repository.mm`.
- * `Repository.mm`: Our main implementation file.
+* `include/`: Module export, umbrella header `Repository.h` and the supplementary headers.
+* `internal/`: Internal implementation, excluded from the package, as they are `#import`ed directly into the single main implementation file `Repository.mm`.
+* `Repository.mm`: Our main implementation file.
 
 # License
 
