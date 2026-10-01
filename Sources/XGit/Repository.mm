@@ -9,6 +9,7 @@
 
 #import <string>
 #import <map>
+#import <sys/stat.h>
 
 #import "Repository.h"
 
@@ -168,6 +169,18 @@ int addReferenceToTargetCommit(const char *name, void *payload)
 - (BOOL)exists
 {
     return repo != NULL;
+}
+
+- (BOOL)isIndexLocked
+{
+    const char *gitDir = git_repository_path(repo);
+    if (gitDir == NULL) {
+        return NO;
+    }
+
+    std::string lockPath = std::string(gitDir) + "index.lock";
+    struct stat buffer;
+    return stat(lockPath.c_str(), &buffer) == 0;
 }
 
 - (void)open

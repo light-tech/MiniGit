@@ -79,6 +79,15 @@
 - (BOOL)exists;
 
 /**
+ * Whether another process currently holds this repository's index
+ * lock (`.git/index.lock`), i.e. a commit/stage is already in
+ * progress elsewhere. `stage:`/`commit:` called while this is true
+ * will fail; a caller that wants to wait rather than fail should
+ * check this first.
+ */
+- (BOOL)isIndexLocked;
+
+/**
  * Update the list of references in each generated Commit
  */
 - (void)updateReferencesTargets;
