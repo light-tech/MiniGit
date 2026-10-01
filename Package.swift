@@ -28,7 +28,14 @@ let package = Package(
         .target(
             name: "XGit",
             dependencies: ["libgit2"],
-            exclude: ["internal"]),
+            exclude: ["internal"],
+            linkerSettings: [
+                .linkedLibrary("z"),
+                .linkedLibrary("iconv"),
+                .linkedLibrary("objc"),
+                .linkedFramework("Foundation"),
+                .linkedFramework("Security"),
+            ]),
         .target(
             name: "MiniGit",
             dependencies: ["XGit"],
