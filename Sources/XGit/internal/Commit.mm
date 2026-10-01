@@ -39,6 +39,8 @@
     git_signature_dup(&author, git_commit_author(commit));
     self->_author = [[Signature alloc] init :author];
 
+    self->_parents = @[];
+    self->_references = @[];
     self->computedParents = false;
 }
 
@@ -49,15 +51,18 @@
 
 - (void)setParents:(nonnull NSArray<Commit*> *)parents
 {
+    self->_parents = parents;
     self->computedParents = true;
 }
 
 - (void)addReference:(nonnull Reference*)ref
 {
+    self->_references = [self->_references arrayByAddingObject :ref];
 }
 
 - (void)removeAllReferences
 {
+    self->_references = @[];
 }
 
 @end

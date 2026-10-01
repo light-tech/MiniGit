@@ -37,22 +37,40 @@
 @property (readonly, nonnull) NSDate *time;
 
 /**
- * (Abstract method) Set the list of references.
+ * This commit's parents (empty for the initial commit, more than one
+ * for a merge commit). Populated by `Repository.log`, which computes
+ * and sets this via `setParents:` as it walks the graph.
+ */
+@property (readonly, nonnull) NSArray<Commit*> *parents;
+
+/**
+ * References (branches, remote-tracking branches, tags) that currently
+ * point directly at this commit. Populated by
+ * `Repository.updateReferencesTargets`, which calls `addReference:` /
+ * `removeAllReferences` as it walks the repository's refs.
+ */
+@property (readonly, nonnull) NSArray<Reference*> *references;
+
+/**
+ * Sets this commit's parents. Called by `Repository` while walking the
+ * commit graph; a subclass that overrides this to add its own behavior
+ * should call `super`.
  *
- * @param ref Reference that points at this commit
+ * @param parents This commit's parent commits
  */
 - (void)setParents:(nonnull NSArray<Commit*> *)parents;
 
 /**
- * (Abstract method) Add a reference that points to this commit
- * The implementation does nothing. Client should implement this.
+ * Records a reference that points to this commit. Called by
+ * `Repository` while walking the repository's refs; a subclass that
+ * overrides this to add its own behavior should call `super`.
  *
  * @param ref Reference that points at this commit
  */
 - (void)addReference:(nonnull Reference*)ref;
 
 /**
- * (Abstract method) Clear the list of Reference's pointing at this commit
+ * Clears the list of references pointing at this commit.
  */
 - (void)removeAllReferences;
 
